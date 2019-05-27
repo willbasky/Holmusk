@@ -1,4 +1,4 @@
-cabal-version:       2.0
+cabal-version:       1.24
 name:                Holmusk
 version:             0.0.0.0
 synopsis:            See README for more info
@@ -13,7 +13,7 @@ copyright:           2019 willbasky
 build-type:          Simple
 extra-doc-files:     README.md
                    , CHANGELOG.md
-tested-with:         GHC == 8.6.4
+tested-with:         GHC == 8.0.1
 
 source-repository head
   type:                git
@@ -22,10 +22,13 @@ source-repository head
 library
   hs-source-dirs:      src
   exposed-modules:     Holmusk
-                       
 
-  build-depends:       base ^>= 4.12.0.0
-                     
+
+  build-depends:       base == 4.*
+                     , random
+                     , monte-carlo
+                     , primitive
+
 
   ghc-options:         -Wall
                        -Wincomplete-uni-patterns
@@ -33,9 +36,9 @@ library
                        -Wcompat
                        -Widentities
                        -Wredundant-constraints
-                       -fhide-source-paths
-                       -Wmissing-export-lists
-                       -Wpartial-fields
+                      --  -fhide-source-paths
+                      --  -Wmissing-export-lists
+                      --  -Wpartial-fields
 
   default-language:    Haskell2010
 
@@ -43,9 +46,9 @@ executable Holmusk
   hs-source-dirs:      app
   main-is:             Main.hs
 
-  build-depends:       base ^>= 4.12.0.0
+  build-depends:       base == 4.*
                      , Holmusk
-                     
+
 
   ghc-options:         -Wall
                        -threaded
@@ -56,8 +59,8 @@ executable Holmusk
                        -Wcompat
                        -Widentities
                        -Wredundant-constraints
-                       -fhide-source-paths
-                       -Wmissing-export-lists
-                       -Wpartial-fields
+                      --  -fhide-source-paths
+                      --  -Wmissing-export-lists
+                      --  -Wpartial-fields
 
   default-language:    Haskell2010

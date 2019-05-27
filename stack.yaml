@@ -1,4 +1,9 @@
-resolver: lts-13.16
+resolver: lts-7.24
 
-ghc-options:
-  "$locals": -fhide-source-paths
+# ghc-options:
+#   "$locals": -fhide-source-paths
+
+extra-deps:
+  - monte-carlo-0.6.2
+  - gsl-random-0.5.3@sha256:ecfd2a9e309033aa9ecae2be575a8ffa36d91ec785d32f86a04063b246a67dd3
+
