@@ -9,7 +9,6 @@ import Control.Monad.Primitive (PrimMonad)
 import Data.Bool (bool)
 import Data.List (minimumBy)
 import qualified Data.Summary.Double as SD
--- import System.Random
 
 
 -- Constants
@@ -37,66 +36,61 @@ arriveProbability t = 1 - exp (time / 100)
   where
     time = bool (negate t) t (t < 0)
 
--- Time of custom waiting in queue.
-waitingTime :: Double -> Double -> Double -> Double
-waitingTime x l b = 200 * x ** (l - 1) * (1 - x) ** (b - 1)
+-- Time of waiting during teller executing a task.
+serviceDistributionTime :: Double -> Double -> Double -> Double
+serviceDistributionTime r l b = 200 * (r ** (l - 1)) * ((1 - r) ** (b - 1))
 
--- main0 :: IO ()
--- main0 = do
---   time <- getStdRandom $ randomR (1,100)
---   let x =  arriveProbability time
---   let yellow = show $ waitingTime x yellowL yellowB
---   let red = show $ waitingTime x redL redB
---   let blue = show $ waitingTime x blueL blueB
---   mapM_ putStrLn ["yellow: " ++ yellow, "red: " ++ red, "blue: " ++ blue]
+leaveGen :: (PrimMonad m) => Double -> Double -> MC m Double
+leaveGen l b = do
+  rand <- uniform 0 1
+  let w = serviceDistributionTime rand l b
+  return w
 
-customer :: (PrimMonad m) => Double -> Double -> MC m Double
-customer l b = do
+leaveList :: Double -> Double -> Int -> [Double]
+leaveList l b n = replicateMC n (leaveGen l b) (mt19937 0)
+
+arrive :: (PrimMonad m) => MC m Double
+arrive = do
   time <- uniform 0 100
-  let x = arriveProbability time
-  let c = waitingTime x l b
-  return c
+  let a = arriveProbability time
+  return a
 
-customerList :: Double -> Double -> Seed -> Int -> [Double]
-customerList l b seed  n = replicateMC n (customer l b) (mt19937 seed)
+arriveList :: Int -> [Double]
+arriveList n = replicateMC n arrive (mt19937 0)
 
 task1 :: Int -> IO ()
 task1 n = do
-  let cys = customerList yellowL yellowB 0 n
-  let summary = SD.fromList cys
+  let cs = leaveList yellowL yellowB n
+  let summary = SD.fromList cs
   let maxWait = show $ SD.maximum summary
   let meanWait = show $ SD.mean summary
   putStrLn $ "Yellow maximum waiting time: " ++ maxWait
   putStrLn $ "Yellow mean waiting time: " ++ meanWait
 
--- Not sure about it.
 task2 :: Int -> IO ()
 task2 n = do
-  let cys = customerList redL redB 0 n
-  let summary = SD.fromList cys
-  let minWait = SD.minimum summary
-  let maxWait = SD.maximum summary
-  let meanWait = SD.mean summary
-  let meanQ = show $ lengthQueue meanWait minWait
-  let maxQ = show $ lengthQueue maxWait minWait
-  -- print summary
-  -- putStrLn $ "Red maximum waiting time:: " ++ show maxWait
-  -- putStrLn $ "Red mean waiting time:: " ++ show meanWait
-  putStrLn $ "Red maximum queue: " ++ maxQ
-  putStrLn $ "Red mean queue: " ++ meanQ
-
-lengthQueue :: Double -> Double -> Int
-lengthQueue maxWait minWait = length $ go maxWait minWait []
-  where
-    go maxWait' minWait' list
-      | minWait' > maxWait' = list
-      | otherwise = go maxWait' (minWait' + minWait) (minWait':list)
+  let cs = leaveList redL redB n
+  let summaryCustomer = SD.fromList cs
+  let as = arriveList n
+  let summaryArrive = SD.fromList as
+  let meanArrive = SD.mean summaryArrive
+  let maxArrive = SD.maximum summaryArrive
+  -- Payload
+  let maxIntensity = meanArrive / SD.maximum summaryCustomer
+  let meanIntensity = meanArrive / SD.mean summaryCustomer
+  -- Queue
+  let queueMax = maxIntensity ^ (2 :: Int) / (1 - maxIntensity)
+  let queueMean = meanIntensity ^ (2 :: Int) / (1 - meanIntensity)
+  putStrLn $ "Red maximum queue: " ++ show queueMax
+  putStrLn $ "Red mean queue: " ++ show queueMean
+  -- putStrLn $ "Red maxIntensity: " ++ show maxIntensity
+  -- putStrLn $ "Red meanIntensity: " ++ show meanIntensity
 
 task3 :: Int -> IO ()
 task3 n = do
-  let cys = customerList yellowL yellowB 0 n
-  let crs = customerList redL redB 0 n
-  let cbs = customerList blueL blueB 0 n
+  let cys = leaveList yellowL yellowB n
+  let crs = leaveList redL redB n
+  let cbs = leaveList blueL blueB n
   let summaryY = SD.fromList cys
   let summaryR = SD.fromList crs
   let summaryB = SD.fromList cbs
