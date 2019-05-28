@@ -1,19 +1,18 @@
 module Holmusk
-       ( someFunc
+       ( task1
+       , task2
+       , task3
        ) where
 
 import Control.Monad.MC
 import Control.Monad.Primitive (PrimMonad)
 import Data.Bool (bool)
-import Data.Data (Data, Typeable)
-import Data.List (foldl', minimumBy)
+import Data.List (minimumBy)
 import qualified Data.Summary.Double as SD
-import System.Random
+-- import System.Random
 
 
-someFunc :: IO ()
-someFunc = putStrLn ("someFunc" :: String)
-
+-- Constants
 redL :: Double
 redL = 2
 
@@ -54,33 +53,47 @@ waitingTime x l b = 200 * x ** (l - 1) * (1 - x) ** (b - 1)
 customer :: (PrimMonad m) => Double -> Double -> MC m Double
 customer l b = do
   time <- uniform 0 100
-  let x =  arriveProbability time
+  let x = arriveProbability time
   let c = waitingTime x l b
   return c
 
 customerList :: Double -> Double -> Seed -> Int -> [Double]
 customerList l b seed  n = replicateMC n (customer l b) (mt19937 seed)
 
--- main1 :: Int -> IO ()
--- main1 n = do
---   let cys = customerList yellowL yellowB 0 n
---   let summary = SD.fromList cys
---   let maxWait = show $ SD.maximum summary
---   let meanWait = show $ SD.mean summary
---   putStrLn $ "Yellow maximum waiting time: " ++ maxWait
---   putStrLn $ "Yellow mean waiting time: " ++ meanWait
+task1 :: Int -> IO ()
+task1 n = do
+  let cys = customerList yellowL yellowB 0 n
+  let summary = SD.fromList cys
+  let maxWait = show $ SD.maximum summary
+  let meanWait = show $ SD.mean summary
+  putStrLn $ "Yellow maximum waiting time: " ++ maxWait
+  putStrLn $ "Yellow mean waiting time: " ++ meanWait
 
-main2 :: Int -> Int -> IO ()
-main2 n seconds = do
+-- Not sure about it.
+task2 :: Int -> IO ()
+task2 n = do
   let cys = customerList redL redB 0 n
   let summary = SD.fromList cys
-  let meanQ = show $ SD.sum summary
-  let maxQ = show $ (fromIntegral $ SD.size summary) * (SD.maximum summary)
+  let minWait = SD.minimum summary
+  let maxWait = SD.maximum summary
+  let meanWait = SD.mean summary
+  let meanQ = show $ lengthQueue meanWait minWait
+  let maxQ = show $ lengthQueue maxWait minWait
+  -- print summary
+  -- putStrLn $ "Red maximum waiting time:: " ++ show maxWait
+  -- putStrLn $ "Red mean waiting time:: " ++ show meanWait
   putStrLn $ "Red maximum queue: " ++ maxQ
   putStrLn $ "Red mean queue: " ++ meanQ
 
-main3 :: Int -> IO ()
-main3 n = do
+lengthQueue :: Double -> Double -> Int
+lengthQueue maxWait minWait = length $ go maxWait minWait []
+  where
+    go maxWait' minWait' list
+      | minWait' > maxWait' = list
+      | otherwise = go maxWait' (minWait' + minWait) (minWait':list)
+
+task3 :: Int -> IO ()
+task3 n = do
   let cys = customerList yellowL yellowB 0 n
   let crs = customerList redL redB 0 n
   let cbs = customerList blueL blueB 0 n

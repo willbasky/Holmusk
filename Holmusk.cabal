@@ -36,9 +36,6 @@ library
                        -Wcompat
                        -Widentities
                        -Wredundant-constraints
-                      --  -fhide-source-paths
-                      --  -Wmissing-export-lists
-                      --  -Wpartial-fields
 
   default-language:    Haskell2010
 
@@ -59,8 +56,5 @@ executable Holmusk
                        -Wcompat
                        -Widentities
                        -Wredundant-constraints
-                      --  -fhide-source-paths
-                      --  -Wmissing-export-lists
-                      --  -Wpartial-fields
 
   default-language:    Haskell2010
